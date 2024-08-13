@@ -7,7 +7,7 @@ import (
 	"next_go_blog/ent"
 	_ "github.com/lib/pq"
     "os"
-
+"next_go_blog/ent/user"
     "github.com/joho/godotenv"
 )
 
@@ -65,6 +65,38 @@ func main() {
 		}
 		// 保存したUserの情報をレスポンスとして返す。
 		c.JSON(201, gin.H{"user": newUser})
+	})
+	router.POST("users/sign_in",func(c *gin.Context){
+
+		// ログインで送られてくるリクエストを型定義
+		type SignInRequest struct{
+			Email string `json:"email" binding:"required"`
+			Password string `json:"password" binding:"required"`
+		}
+
+		// 変数reqをSignInRequestで定義
+		var req SignInRequest
+
+		//reqに取得したデータを格納、変換でエラーが起きた場合はエラーを返して終了
+		if err :=c.ShouldBindJSON(&req); err != nil{
+			c.JSON(400, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		// ユーザの検索を行う
+		sign_in_user, err := client.User.Query().
+			Where(user.EmailEQ(req.Email), user.PasswordEQ(req.Password)).
+			First(context.Background())
+		
+		//エラーを返す
+		if err != nil {
+			c.JSON(401, gin.H{"error": "invalid credentials"})
+			return
+		}
+
+		// ログイン成功
+		c.JSON(200, gin.H{"user": sign_in_user})
+
 	})
 
 	// サーバー起動
