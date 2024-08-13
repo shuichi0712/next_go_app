@@ -6,14 +6,22 @@ import (
    "log"
 	"next_go_blog/ent"
 	_ "github.com/lib/pq"
+    "os"
+
+    "github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+    	log.Fatal("Error loading .env file")
+	}
+	godotenv.Load(".env")
 	//Ginフレームワークのデフォルトの設定を使用してルータを作成
 	router := gin.Default()
 	//PostgreSQLに接続
    client, err := ent.Open("postgres", "host=db port=5432 user=postgres dbname=db password=password sslmode=disable")
-
+	localhost := os.Getenv("LOCAL_URL")
 	if err != nil {
 		log.Fatalf("failed opening connection to postgres: %v", err)
 	}
@@ -22,7 +30,7 @@ func main() {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", localhost)
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
