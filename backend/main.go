@@ -98,6 +98,25 @@ func main() {
 		c.JSON(200, gin.H{"user": sign_in_user})
 
 	})
+	router.POST("/studytimes", func(c *gin.Context) {
+		type StudyTimeRequest struct {
+			UserId int `json:"user_id" binding:"required"`
+			Title string `json:"title" binding:"required"`
+			Hour int `json:"hour" binding:"required"`
+			Minite int `json:"minite" binding:"required"`
+		}
+		var req StudyTimeRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(400, gin.H{"error": "Invalid request"})
+			return
+		}
+		newStudyTime, err := client.StudyTime.Create().SetUserID(req.UserId).SetTitle(req.Title).SetHour(req.Hour).SetMinite(req.Minite).Save(context.Background())
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(201, gin.H{"study_time": newStudyTime})
+	})
 
 	// サーバー起動
 	router.Run(":8080")
